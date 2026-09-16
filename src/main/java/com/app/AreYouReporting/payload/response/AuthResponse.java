@@ -26,5 +26,5 @@ public class AuthResponse {
     private UUID activeSubDepartmentId;
     private String activeSubDepartmentName;
     private List<UserRoleAssignmentDto> availableAssignments;
-    private List<ResourceGrantsDto> grants;
 }
+

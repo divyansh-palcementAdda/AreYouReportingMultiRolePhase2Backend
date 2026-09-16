@@ -94,12 +94,6 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = tokenProvider.generateAccessToken(principal, activeRoleId, activeRoleName, activeDeptId, activeSubDeptId);
         String refreshToken = tokenProvider.generateRefreshToken(principal);
 
-        List<Permission> allPermissions = permissionRepository.findAllByOrderByResourceAscActionAsc();
-        Set<Permission> activePermissions = activeAssignment != null && activeAssignment.getRole() != null && activeAssignment.getRole().getPermissions() != null
-                ? activeAssignment.getRole().getPermissions()
-                : Collections.emptySet();
-
-        List<ResourceGrantsDto> grants = permissionMapper.toResourceGrants(allPermissions, activePermissions);
         List<UserRoleAssignmentDto> availableAssignments = userMapper.toAssignmentDtoList(assignments);
 
         auditService.log(user.getUsername(), activeRoleName, "USER_LOGIN", "USER", user.getId().toString(), null, null, "Successful login as " + activeRoleName, AuditStatus.SUCCESS, null);
@@ -117,7 +111,6 @@ public class AuthServiceImpl implements AuthService {
                 .activeSubDepartmentId(activeSubDeptId)
                 .activeSubDepartmentName(activeSubDeptName)
                 .availableAssignments(availableAssignments)
-                .grants(grants)
                 .build();
     }
 
@@ -147,13 +140,6 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = tokenProvider.generateAccessToken(principal, activeRoleId, activeRoleName, activeDeptId, activeSubDeptId);
         String refreshToken = tokenProvider.generateRefreshToken(principal);
 
-        List<Permission> allPermissions = permissionRepository.findAllByOrderByResourceAscActionAsc();
-        Set<Permission> activePermissions = targetAssignment.getRole().getPermissions() != null
-                ? targetAssignment.getRole().getPermissions()
-                : Collections.emptySet();
-
-        List<ResourceGrantsDto> grants = permissionMapper.toResourceGrants(allPermissions, activePermissions);
-
         auditService.log(user.getUsername(), activeRoleName, "SWITCH_CONTEXT", "USER", user.getId().toString(), null, null, "Switched context to role=" + activeRoleName + " dept=" + activeDeptName, AuditStatus.SUCCESS, null);
 
         return AuthResponse.builder()
@@ -169,7 +155,6 @@ public class AuthServiceImpl implements AuthService {
                 .activeSubDepartmentId(activeSubDeptId)
                 .activeSubDepartmentName(activeSubDeptName)
                 .availableAssignments(userMapper.toAssignmentDtoList(assignments))
-                .grants(grants)
                 .build();
     }
 
@@ -194,11 +179,6 @@ public class AuthServiceImpl implements AuthService {
         String newAccessToken = tokenProvider.generateAccessToken(principal, activeRoleId, activeRoleName, activeDeptId, activeSubDeptId);
         String newRefreshToken = tokenProvider.generateRefreshToken(principal);
 
-        List<Permission> allPermissions = permissionRepository.findAllByOrderByResourceAscActionAsc();
-        Set<Permission> activePermissions = first != null && first.getRole() != null && first.getRole().getPermissions() != null
-                ? first.getRole().getPermissions()
-                : Collections.emptySet();
-
         return AuthResponse.builder()
                 .tokenType("Bearer")
                 .accessToken(newAccessToken)
@@ -215,7 +195,6 @@ public class AuthServiceImpl implements AuthService {
                 .activeDepartmentId(activeDeptId)
                 .activeSubDepartmentId(activeSubDeptId)
                 .availableAssignments(userMapper.toAssignmentDtoList(assignments))
-                .grants(permissionMapper.toResourceGrants(allPermissions, activePermissions))
                 .build();
     }
 

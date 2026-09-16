@@ -3,6 +3,7 @@ package com.app.AreYouReporting.controller;
 import com.app.AreYouReporting.payload.response.ApiResponse;
 import com.app.AreYouReporting.payload.response.PermissionDto;
 import com.app.AreYouReporting.payload.response.ResourceGrantsDto;
+import com.app.AreYouReporting.payload.response.UserPermissionResponse;
 import com.app.AreYouReporting.service.interfaces.PermissionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping({"/api/v1/permissions", "/api/permissions"})
+@RequestMapping({"/api/v1/permissions"})
 @RequiredArgsConstructor
 @Tag(name = "Permissions Management", description = "Endpoints for dynamic permission discovery and role-permission grants")
 public class PermissionController {
@@ -41,6 +42,25 @@ public class PermissionController {
         List<ResourceGrantsDto> grants = permissionService.getPermissionsByRoleId(roleId);
         return ResponseEntity.ok(grants);
     }
+
+    @GetMapping({"/user-permissions", "/get-permissions-by-user", "/me"})
+    @Operation(summary = "Get permissions and custom scopes for a user (or current authenticated user if userId not provided)")
+    public ResponseEntity<ApiResponse<UserPermissionResponse>> getUserPermissions(
+            @RequestParam(value = "userId", required = false) UUID userId,
+            @RequestParam(value = "roleId", required = false) UUID roleId) {
+        UserPermissionResponse response = permissionService.getUserPermissions(userId, roleId);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/user/{userId}")
+    @Operation(summary = "Get permissions and custom scopes for a specific user ID")
+    public ResponseEntity<ApiResponse<UserPermissionResponse>> getPermissionsByUserId(
+            @PathVariable("userId") UUID userId,
+            @RequestParam(value = "roleId", required = false) UUID roleId) {
+        UserPermissionResponse response = permissionService.getUserPermissions(userId, roleId);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
 
     @GetMapping("/{id}")
     @Operation(summary = "Get permission by ID")

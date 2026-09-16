@@ -134,8 +134,9 @@ public class DataInitializer implements CommandLineRunner {
         Role teacherRole = roleRepository.findByName("TEACHER").orElse(null);
 
         // 1. Super Admin
-        if (!userRepository.existsByUsername(superAdminUsername)) {
-            User superAdmin = User.builder()
+        User superAdmin = userRepository.findByUsername(superAdminUsername).orElse(null);
+        if (superAdmin == null) {
+            superAdmin = User.builder()
                     .username(superAdminUsername)
                     .email(superAdminEmail)
                     .password(passwordEncoder.encode(superAdminPassword))
@@ -144,25 +145,27 @@ public class DataInitializer implements CommandLineRunner {
                     .isActive(true)
                     .build();
             superAdmin = userRepository.save(superAdmin);
+            log.info("Super Admin user created: {}", superAdminUsername);
+        }
 
-            if (superAdminRole != null) {
-                UserRoleAssignment saAssignment = UserRoleAssignment.builder()
-                        .user(superAdmin)
-                        .role(superAdminRole)
-                        .dataScopeType(DataScopeType.GLOBAL)
-                        .isActive(true)
-                        .build();
-                userRoleAssignmentRepository.save(saAssignment);
-            }
-            log.info("Super Admin user seeded: {}", superAdminUsername);
+        if (superAdminRole != null && userRoleAssignmentRepository.findByUserIdAndIsActiveTrue(superAdmin.getId()).isEmpty()) {
+            UserRoleAssignment saAssignment = UserRoleAssignment.builder()
+                    .user(superAdmin)
+                    .role(superAdminRole)
+                    .dataScopeType(DataScopeType.GLOBAL)
+                    .isActive(true)
+                    .build();
+            userRoleAssignmentRepository.save(saAssignment);
+            log.info("Super Admin role assignment seeded: {}", superAdminUsername);
         }
 
         // 2. Admin
-        if (!userRepository.existsByUsername(adminUsername)) {
+        User admin = userRepository.findByUsername(adminUsername).orElse(null);
+        if (admin == null) {
             Set<Department> depts = new HashSet<>();
             if (cse != null) depts.add(cse);
 
-            User admin = User.builder()
+            admin = User.builder()
                     .username(adminUsername)
                     .email(adminEmail)
                     .password(passwordEncoder.encode(adminPassword))
@@ -172,26 +175,28 @@ public class DataInitializer implements CommandLineRunner {
                     .isActive(true)
                     .build();
             admin = userRepository.save(admin);
+            log.info("Admin user created: {}", adminUsername);
+        }
 
-            if (adminRole != null) {
-                UserRoleAssignment adminAssignment = UserRoleAssignment.builder()
-                        .user(admin)
-                        .role(adminRole)
-                        .department(cse)
-                        .dataScopeType(DataScopeType.DEPARTMENT)
-                        .isActive(true)
-                        .build();
-                userRoleAssignmentRepository.save(adminAssignment);
-            }
-            log.info("Admin user seeded: {}", adminUsername);
+        if (adminRole != null && userRoleAssignmentRepository.findByUserIdAndIsActiveTrue(admin.getId()).isEmpty()) {
+            UserRoleAssignment adminAssignment = UserRoleAssignment.builder()
+                    .user(admin)
+                    .role(adminRole)
+                    .department(cse)
+                    .dataScopeType(DataScopeType.DEPARTMENT)
+                    .isActive(true)
+                    .build();
+            userRoleAssignmentRepository.save(adminAssignment);
+            log.info("Admin role assignment seeded: {}", adminUsername);
         }
 
         // 3. Sub-Admin
-        if (!userRepository.existsByUsername(subAdminUsername)) {
+        User subAdmin = userRepository.findByUsername(subAdminUsername).orElse(null);
+        if (subAdmin == null) {
             Set<Department> depts = new HashSet<>();
             if (cse != null) depts.add(cse);
 
-            User subAdmin = User.builder()
+            subAdmin = User.builder()
                     .username(subAdminUsername)
                     .email(subAdminEmail)
                     .password(passwordEncoder.encode(subAdminPassword))
@@ -201,28 +206,30 @@ public class DataInitializer implements CommandLineRunner {
                     .isActive(true)
                     .build();
             subAdmin = userRepository.save(subAdmin);
+            log.info("Sub-Admin user created: {}", subAdminUsername);
+        }
 
-            if (subAdminRole != null) {
-                UserRoleAssignment subAdminAssignment = UserRoleAssignment.builder()
-                        .user(subAdmin)
-                        .role(subAdminRole)
-                        .department(cse)
-                        .dataScopeType(DataScopeType.DEPARTMENT)
-                        .isActive(true)
-                        .build();
-                userRoleAssignmentRepository.save(subAdminAssignment);
-            }
-            log.info("Sub-Admin user seeded: {}", subAdminUsername);
+        if (subAdminRole != null && userRoleAssignmentRepository.findByUserIdAndIsActiveTrue(subAdmin.getId()).isEmpty()) {
+            UserRoleAssignment subAdminAssignment = UserRoleAssignment.builder()
+                    .user(subAdmin)
+                    .role(subAdminRole)
+                    .department(cse)
+                    .dataScopeType(DataScopeType.DEPARTMENT)
+                    .isActive(true)
+                    .build();
+            userRoleAssignmentRepository.save(subAdminAssignment);
+            log.info("Sub-Admin role assignment seeded: {}", subAdminUsername);
         }
 
         // 4. Default HOD / Multi-role Teacher Demo
-        if (!userRepository.existsByUsername("dr.sharma")) {
+        User prof = userRepository.findByUsername("dr.sharma").orElse(null);
+        if (prof == null) {
             Set<Department> depts = new HashSet<>();
             Set<SubDepartment> subDepts = new HashSet<>();
             if (cse != null) depts.add(cse);
             if (aiml != null) subDepts.add(aiml);
 
-            User prof = User.builder()
+            prof = User.builder()
                     .username("dr.sharma")
                     .email("dr.sharma@rcef.com")
                     .password(passwordEncoder.encode("Sharma@123"))
@@ -233,7 +240,10 @@ public class DataInitializer implements CommandLineRunner {
                     .isActive(true)
                     .build();
             prof = userRepository.save(prof);
+            log.info("Dr. Sharma user created: dr.sharma");
+        }
 
+        if (userRoleAssignmentRepository.findByUserIdAndIsActiveTrue(prof.getId()).isEmpty()) {
             if (hodRole != null) {
                 UserRoleAssignment hodAssignment = UserRoleAssignment.builder()
                         .user(prof)
@@ -257,7 +267,7 @@ public class DataInitializer implements CommandLineRunner {
                         .build();
                 userRoleAssignmentRepository.save(teacherAssignment);
             }
-            log.info("Multi-role HOD/Teacher user seeded: dr.sharma");
+            log.info("Multi-role HOD/Teacher role assignments seeded: dr.sharma");
         }
     }
 }

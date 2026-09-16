@@ -17,13 +17,10 @@ public interface UserRoleAssignmentRepository extends JpaRepository<UserRoleAssi
 
     List<UserRoleAssignment> findByUserIdAndIsActiveTrue(UUID userId);
 
-    @Query("SELECT ura FROM UserRoleAssignment ura " +
+    @Query("SELECT DISTINCT ura FROM UserRoleAssignment ura " +
            "LEFT JOIN FETCH ura.role r " +
-           "LEFT JOIN FETCH r.permissions " +
            "LEFT JOIN FETCH ura.department " +
            "LEFT JOIN FETCH ura.subDepartment " +
-           "LEFT JOIN FETCH ura.customDepartments " +
-           "LEFT JOIN FETCH ura.customSubDepartments " +
            "WHERE ura.user.id = :userId AND ura.isActive = true")
     List<UserRoleAssignment> findAllActiveWithDetailsByUserId(@Param("userId") UUID userId);
 

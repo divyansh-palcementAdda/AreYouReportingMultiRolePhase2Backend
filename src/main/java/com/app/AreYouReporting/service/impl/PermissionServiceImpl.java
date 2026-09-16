@@ -2,13 +2,21 @@ package com.app.AreYouReporting.service.impl;
 
 import com.app.AreYouReporting.Entities.Permission;
 import com.app.AreYouReporting.Entities.Role;
+import com.app.AreYouReporting.Entities.User;
+import com.app.AreYouReporting.Entities.UserRoleAssignment;
 import com.app.AreYouReporting.exceptions.InvalidOperationException;
 import com.app.AreYouReporting.exceptions.ResourceNotFoundException;
 import com.app.AreYouReporting.mapper.PermissionMapper;
+import com.app.AreYouReporting.mapper.UserMapper;
 import com.app.AreYouReporting.payload.response.PermissionDto;
 import com.app.AreYouReporting.payload.response.ResourceGrantsDto;
+import com.app.AreYouReporting.payload.response.UserPermissionResponse;
+import com.app.AreYouReporting.payload.response.UserRoleAssignmentDto;
 import com.app.AreYouReporting.repository.PermissionRepository;
 import com.app.AreYouReporting.repository.RoleRepository;
+import com.app.AreYouReporting.repository.UserRepository;
+import com.app.AreYouReporting.repository.UserRoleAssignmentRepository;
+import com.app.AreYouReporting.security.ScopeAuthorizationService;
 import com.app.AreYouReporting.service.interfaces.PermissionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +33,12 @@ public class PermissionServiceImpl implements PermissionService {
 
     private final PermissionRepository permissionRepository;
     private final RoleRepository roleRepository;
+    private final UserRepository userRepository;
+    private final UserRoleAssignmentRepository assignmentRepository;
     private final PermissionMapper permissionMapper;
+    private final UserMapper userMapper;
+    private final ScopeAuthorizationService scopeSecurity;
+
 
     @Override
     @Transactional(readOnly = true)
@@ -48,6 +62,67 @@ public class PermissionServiceImpl implements PermissionService {
         List<Permission> allPermissions = permissionRepository.findAllByOrderByResourceAscActionAsc();
         return permissionMapper.toResourceGrants(allPermissions, role.getPermissions());
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserPermissionResponse getUserPermissions(UUID userId, UUID roleId) {
+        final UUID targetUserId = (userId != null) ? userId : scopeSecurity.getCurrentUserId();
+
+        User user = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", targetUserId));
+
+        List<UserRoleAssignment> assignments = assignmentRepository.findAllActiveWithDetailsByUserId(targetUserId);
+
+        Set<Permission> userPermissions = new HashSet<>();
+        UUID activeRoleId = null;
+        String activeRoleName = null;
+
+        if (roleId != null) {
+            UserRoleAssignment matching = assignments.stream()
+                    .filter(a -> a.getRole() != null && a.getRole().getId().equals(roleId))
+                    .findFirst()
+                    .orElse(null);
+
+            if (matching != null && matching.getRole() != null) {
+                activeRoleId = matching.getRole().getId();
+                activeRoleName = matching.getRole().getName();
+                if (matching.getRole().getPermissions() != null) {
+                    userPermissions.addAll(matching.getRole().getPermissions());
+                }
+            }
+        } else {
+            for (UserRoleAssignment assignment : assignments) {
+                if (assignment.getRole() != null && assignment.getRole().getPermissions() != null) {
+                    userPermissions.addAll(assignment.getRole().getPermissions());
+                }
+            }
+            if (!assignments.isEmpty() && assignments.get(0).getRole() != null) {
+                activeRoleId = assignments.get(0).getRole().getId();
+                activeRoleName = assignments.get(0).getRole().getName();
+            }
+        }
+
+        List<Permission> allPermissions = permissionRepository.findAllByOrderByResourceAscActionAsc();
+        List<ResourceGrantsDto> grants = permissionMapper.toResourceGrants(allPermissions, userPermissions);
+        List<String> flatPermissions = userPermissions.stream()
+                .map(Permission::getAuthority)
+                .sorted()
+                .collect(Collectors.toList());
+
+        List<UserRoleAssignmentDto> assignmentDtos = userMapper.toAssignmentDtoList(assignments);
+
+        return UserPermissionResponse.builder()
+                .userId(user.getId())
+                .username(user.getUsername())
+                .fullName(user.getFullName())
+                .activeRoleId(activeRoleId)
+                .activeRoleName(activeRoleName)
+                .assignments(assignmentDtos)
+                .grants(grants)
+                .permissions(flatPermissions)
+                .build();
+    }
+
 
     @Override
     @Transactional(readOnly = true)
