@@ -1,7 +1,9 @@
 package com.app.AreYouReporting.service.impl;
 
 import com.app.AreYouReporting.Entities.AuditStatus;
+import com.app.AreYouReporting.Entities.DataScopeType;
 import com.app.AreYouReporting.Entities.Permission;
+import com.app.AreYouReporting.Entities.Role;
 import com.app.AreYouReporting.Entities.User;
 import com.app.AreYouReporting.Entities.UserRoleAssignment;
 import com.app.AreYouReporting.exceptions.InvalidOperationException;
@@ -18,6 +20,7 @@ import com.app.AreYouReporting.payload.response.UserDto;
 import com.app.AreYouReporting.payload.response.UserRoleAssignmentDto;
 import com.app.AreYouReporting.payload.response.UserSummaryDto;
 import com.app.AreYouReporting.repository.PermissionRepository;
+import com.app.AreYouReporting.repository.RoleRepository;
 import com.app.AreYouReporting.repository.UserRepository;
 import com.app.AreYouReporting.repository.UserRoleAssignmentRepository;
 import com.app.AreYouReporting.security.CustomUserDetailsService;
@@ -47,6 +50,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenProvider tokenProvider;
     private final UserRepository userRepository;
     private final UserRoleAssignmentRepository assignmentRepository;
+    private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
     private final UserMapper userMapper;
     private final PermissionMapper permissionMapper;
@@ -80,6 +84,23 @@ public class AuthServiceImpl implements AuthService {
 
         if (activeAssignment == null && !assignments.isEmpty()) {
             activeAssignment = assignments.get(0);
+        }
+
+        // Auto-heal: If superadmin has no active role assignment, automatically create and assign SUPER_ADMIN role
+        if (activeAssignment == null && "superadmin".equalsIgnoreCase(user.getUsername())) {
+            Role superAdminRole = roleRepository.findByName("SUPER_ADMIN").orElse(null);
+            if (superAdminRole != null) {
+                UserRoleAssignment saAssignment = UserRoleAssignment.builder()
+                        .user(user)
+                        .role(superAdminRole)
+                        .dataScopeType(DataScopeType.GLOBAL)
+                        .isActive(true)
+                        .build();
+                saAssignment = assignmentRepository.save(saAssignment);
+                assignments = new ArrayList<>(assignments);
+                assignments.add(saAssignment);
+                activeAssignment = saAssignment;
+            }
         }
 
         UUID activeRoleId = activeAssignment != null && activeAssignment.getRole() != null ? activeAssignment.getRole().getId() : null;
@@ -166,7 +187,16 @@ public class AuthServiceImpl implements AuthService {
         }
 
         UUID userId = tokenProvider.getUserIdFromToken(request.getRefreshToken());
-        UserPrincipal principal = (UserPrincipal) customUserDetailsService.loadUserById(userId);
+        if (userId == null) {
+            throw new UnauthorizedException("Invalid or expired refresh token");
+        }
+
+        UserPrincipal principal = customUserDetailsService.findUserPrincipalById(userId)
+                .orElseThrow(() -> new UnauthorizedException("User account no longer exists"));
+
+        if (!principal.isEnabled()) {
+            throw new UnauthorizedException("User account is inactive");
+        }
 
         List<UserRoleAssignment> assignments = assignmentRepository.findAllActiveWithDetailsByUserId(userId);
         UserRoleAssignment first = !assignments.isEmpty() ? assignments.get(0) : null;

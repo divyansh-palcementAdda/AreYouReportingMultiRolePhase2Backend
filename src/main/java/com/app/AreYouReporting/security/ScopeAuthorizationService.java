@@ -38,8 +38,18 @@ public class ScopeAuthorizationService {
 
     public boolean isSuperAdmin(UserPrincipal principal) {
         if (principal == null) return false;
-        return principal.getAssignments().stream()
-                .anyMatch(a -> a.isActive() && a.getRole() != null && "SUPER_ADMIN".equalsIgnoreCase(a.getRole().getName()));
+        if ("superadmin".equalsIgnoreCase(principal.getUsername())) {
+            return true;
+        }
+        if (principal.getAuthorities() != null && principal.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equalsIgnoreCase("ROLE_SUPER_ADMIN") || a.getAuthority().equalsIgnoreCase("SUPER_ADMIN"))) {
+            return true;
+        }
+        if (principal.getAssignments() != null) {
+            return principal.getAssignments().stream()
+                    .anyMatch(a -> a.isActive() && a.getRole() != null && "SUPER_ADMIN".equalsIgnoreCase(a.getRole().getName()));
+        }
+        return false;
     }
 
     public boolean hasPermission(String authority) {

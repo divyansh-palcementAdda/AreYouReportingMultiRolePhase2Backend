@@ -82,8 +82,19 @@ public class JwtTokenProvider {
     }
 
     public UUID getUserIdFromToken(String token) {
-        Claims claims = getClaims(token);
-        return UUID.fromString(claims.getSubject());
+        try {
+            Claims claims = getClaims(token);
+            if (claims == null || claims.getSubject() == null) {
+                return null;
+            }
+            return UUID.fromString(claims.getSubject().trim());
+        } catch (IllegalArgumentException ex) {
+            log.warn("Invalid UUID subject format in JWT token: {}", ex.getMessage());
+            return null;
+        } catch (Exception ex) {
+            log.warn("Could not extract userId from JWT token: {}", ex.getMessage());
+            return null;
+        }
     }
 
     public Claims getClaims(String token) {

@@ -43,6 +43,10 @@ public class UserPrincipal implements UserDetails {
             }
         }
 
+        if ("superadmin".equalsIgnoreCase(user.getUsername())) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"));
+        }
+
         Set<UUID> deptIds = user.getDepartments() != null
                 ? user.getDepartments().stream().map(d -> d.getId()).collect(Collectors.toSet())
                 : Collections.emptySet();

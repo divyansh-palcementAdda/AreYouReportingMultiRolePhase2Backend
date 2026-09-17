@@ -39,28 +39,50 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jwt = getJwtFromRequest(request);
 
             if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
-                UUID userId = tokenProvider.getUserIdFromToken(jwt);
-                UserPrincipal userPrincipal = (UserPrincipal) customUserDetailsService.loadUserById(userId);
-
                 Claims claims = tokenProvider.getClaims(jwt);
+                UUID userId = tokenProvider.getUserIdFromToken(jwt);
+                Optional<UserPrincipal> userPrincipalOpt = Optional.empty();
 
-                // Check active context from headers or token claims
-                UUID activeRoleId = getUuidFromHeaderOrClaims(request, "X-Active-Role", claims, "activeRoleId");
-                UUID activeDeptId = getUuidFromHeaderOrClaims(request, "X-Active-Department-Id", claims, "activeDepartmentId");
-                UUID activeSubDeptId = getUuidFromHeaderOrClaims(request, "X-Active-SubDepartment-Id", claims, "activeSubDepartmentId");
+                if (userId != null) {
+                    userPrincipalOpt = customUserDetailsService.findUserPrincipalById(userId);
+                }
 
-                // Resolve matching assignment
-                ActiveUserContext activeContext = buildActiveContext(userPrincipal, activeRoleId, activeDeptId, activeSubDeptId);
-                request.setAttribute(ScopeAuthorizationService.CONTEXT_ATTRIBUTE, activeContext);
+                // Fallback: If not matched by UUID, attempt lookup by signed username claim
+                if (userPrincipalOpt.isEmpty() && claims != null && claims.get("username") != null) {
+                    String usernameClaim = claims.get("username").toString();
+                    userPrincipalOpt = customUserDetailsService.findUserPrincipalByUsername(usernameClaim);
+                }
 
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                if (userPrincipalOpt.isPresent()) {
+                    UserPrincipal userPrincipal = userPrincipalOpt.get();
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    if (userPrincipal.isEnabled()) {
+                        // Check active context from headers or token claims
+                        UUID activeRoleId = getUuidFromHeaderOrClaims(request, "X-Active-Role", claims, "activeRoleId");
+                        UUID activeDeptId = getUuidFromHeaderOrClaims(request, "X-Active-Department-Id", claims, "activeDepartmentId");
+                        UUID activeSubDeptId = getUuidFromHeaderOrClaims(request, "X-Active-SubDepartment-Id", claims, "activeSubDepartmentId");
+
+                        // Resolve matching assignment
+                        ActiveUserContext activeContext = buildActiveContext(userPrincipal, activeRoleId, activeDeptId, activeSubDeptId);
+                        request.setAttribute(ScopeAuthorizationService.CONTEXT_ATTRIBUTE, activeContext);
+
+                        UsernamePasswordAuthenticationToken authentication =
+                                new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
+                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    } else {
+                        log.warn("Authentication failed: User account is inactive for user: {}", userPrincipal.getUsername());
+                        SecurityContextHolder.clearContext();
+                    }
+                } else {
+                    log.warn("Authentication failed: User not found in active database for token subject ID: {}", userId);
+                    SecurityContextHolder.clearContext();
+                }
             }
         } catch (Exception ex) {
-            log.error("Could not set user authentication in security context: {}", ex.getMessage());
+            log.warn("Could not set user authentication in security context: {}", ex.getMessage());
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);
@@ -107,6 +129,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (matched.getCustomSubDepartments() != null) {
                 customSubDeptIds = matched.getCustomSubDepartments().stream().map(sd -> sd.getId()).collect(Collectors.toSet());
             }
+        } else if ("superadmin".equalsIgnoreCase(principal.getUsername()) || (principal.getAuthorities() != null && principal.getAuthorities().stream().anyMatch(a -> a.getAuthority().equalsIgnoreCase("ROLE_SUPER_ADMIN")))) {
+            effectiveScope = DataScopeType.GLOBAL;
+            roleName = "SUPER_ADMIN";
         }
 
         Set<String> authorities = principal.getAuthorities().stream()

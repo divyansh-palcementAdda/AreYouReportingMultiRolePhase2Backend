@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -33,4 +34,22 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         return UserPrincipal.create(user);
     }
+
+    @Transactional(readOnly = true)
+    public Optional<UserPrincipal> findUserPrincipalById(UUID id) {
+        if (id == null) {
+            return Optional.empty();
+        }
+        return userRepository.findById(id).map(UserPrincipal::create);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<UserPrincipal> findUserPrincipalByUsername(String username) {
+        if (username == null || username.isBlank()) {
+            return Optional.empty();
+        }
+        return userRepository.findByUsername(username.trim()).map(UserPrincipal::create);
+    }
 }
+
+
