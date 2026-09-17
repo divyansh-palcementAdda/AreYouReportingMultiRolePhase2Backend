@@ -8,10 +8,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service("scopeSecurity")
@@ -57,8 +54,38 @@ public class ScopeAuthorizationService {
         if (isSuperAdmin(principal)) {
             return true;
         }
+
+        Set<String> aliases = resolvePermissionAliases(authority);
         return principal.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equalsIgnoreCase(authority));
+                .anyMatch(a -> aliases.contains(a.getAuthority().toLowerCase().trim()));
+    }
+
+    private Set<String> resolvePermissionAliases(String authority) {
+        if (authority == null || authority.isBlank()) return Collections.emptySet();
+        String normalized = authority.toLowerCase().trim();
+        Set<String> aliases = new HashSet<>();
+        aliases.add(normalized);
+        aliases.add(authority.toUpperCase().trim());
+
+        if (normalized.equals("dropdowns.departments") || normalized.equals("dropdown_view_departments")) {
+            aliases.addAll(List.of("dropdowns.departments", "dropdown_view_departments", "dropdowns.read", "departments.read"));
+        } else if (normalized.equals("dropdowns.sub-departments") || normalized.equals("dropdown_view_sub_departments")) {
+            aliases.addAll(List.of("dropdowns.sub-departments", "dropdown_view_sub_departments", "dropdowns.read", "sub-departments.read"));
+        } else if (normalized.equals("dropdowns.users") || normalized.equals("dropdown_view_users")) {
+            aliases.addAll(List.of("dropdowns.users", "dropdown_view_users", "dropdowns.read", "users.read"));
+        } else if (normalized.equals("dropdowns.tasks") || normalized.equals("dropdown_view_tasks")) {
+            aliases.addAll(List.of("dropdowns.tasks", "dropdown_view_tasks", "dropdowns.read", "tasks.read"));
+        } else if (normalized.equals("dropdowns.templates") || normalized.equals("dropdown_view_task_templates")) {
+            aliases.addAll(List.of("dropdowns.templates", "dropdown_view_task_templates", "dropdowns.read", "templates.read"));
+        } else if (normalized.equals("dropdowns.roles") || normalized.equals("dropdown_view_roles")) {
+            aliases.addAll(List.of("dropdowns.roles", "dropdown_view_roles", "dropdowns.read", "roles.read"));
+        } else if (normalized.equals("dropdowns.permissions") || normalized.equals("dropdown_view_permission_options")) {
+            aliases.addAll(List.of("dropdowns.permissions", "dropdown_view_permission_options", "dropdowns.read", "roles.assign-permissions"));
+        } else if (normalized.equals("dropdowns.options")) {
+            aliases.addAll(List.of("dropdowns.options", "dropdown_view_task_status_options", "dropdown_view_request_status_options", "dropdown_view_proof_requirements"));
+        }
+
+        return aliases.stream().map(String::toLowerCase).collect(Collectors.toSet());
     }
 
     public void validatePermission(String authority) {

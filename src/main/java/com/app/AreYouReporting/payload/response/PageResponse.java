@@ -20,6 +20,7 @@ public class PageResponse<T> {
     private long totalElements;
     private int totalPages;
     private boolean last;
+    private boolean hasNext;
 
     public static <T> PageResponse<T> of(Page<T> page) {
         return PageResponse.<T>builder()
@@ -29,6 +30,7 @@ public class PageResponse<T> {
                 .totalElements(page.getTotalElements())
                 .totalPages(page.getTotalPages())
                 .last(page.isLast())
+                .hasNext(page.hasNext())
                 .build();
     }
 
@@ -40,6 +42,7 @@ public class PageResponse<T> {
                 .totalElements(page.getTotalElements())
                 .totalPages(page.getTotalPages())
                 .last(page.isLast())
+                .hasNext(page.hasNext())
                 .build();
     }
 }

@@ -167,6 +167,7 @@ public class PermissionServiceImpl implements PermissionService {
         moduleActions.put("audits", List.of("read", "export"));
         moduleActions.put("dashboard", List.of("read"));
         moduleActions.put("settings", List.of("read", "update"));
+        moduleActions.put("dropdowns", List.of("departments", "sub-departments", "users", "tasks", "templates", "roles", "permissions", "options"));
 
         for (Map.Entry<String, List<String>> entry : moduleActions.entrySet()) {
             String resource = entry.getKey();
@@ -182,6 +183,33 @@ public class PermissionServiceImpl implements PermissionService {
                             .build();
                     permissionRepository.save(p);
                 }
+            }
+        }
+
+        // Seed DROPDOWN_VIEW_* named permissions
+        Map<String, String> dropdownAliases = new LinkedHashMap<>();
+        dropdownAliases.put("DROPDOWN_VIEW_DEPARTMENTS", "Permission to view selectable departments in dropdowns");
+        dropdownAliases.put("DROPDOWN_VIEW_SUB_DEPARTMENTS", "Permission to view selectable sub-departments in dropdowns");
+        dropdownAliases.put("DROPDOWN_VIEW_USERS", "Permission to view selectable users in dropdowns");
+        dropdownAliases.put("DROPDOWN_VIEW_TASKS", "Permission to view selectable tasks in dropdowns");
+        dropdownAliases.put("DROPDOWN_VIEW_TASK_TEMPLATES", "Permission to view selectable task templates in dropdowns");
+        dropdownAliases.put("DROPDOWN_VIEW_ROLES", "Permission to view selectable roles in dropdowns");
+        dropdownAliases.put("DROPDOWN_VIEW_PERMISSION_OPTIONS", "Permission to view selectable permissions in dropdowns");
+        dropdownAliases.put("DROPDOWN_VIEW_PROOF_REQUIREMENTS", "Permission to view proof requirement options in dropdowns");
+        dropdownAliases.put("DROPDOWN_VIEW_TASK_STATUS_OPTIONS", "Permission to view task status options in dropdowns");
+        dropdownAliases.put("DROPDOWN_VIEW_REQUEST_STATUS_OPTIONS", "Permission to view request status options in dropdowns");
+
+        for (Map.Entry<String, String> entry : dropdownAliases.entrySet()) {
+            String authority = entry.getKey();
+            if (!permissionRepository.existsByAuthority(authority)) {
+                Permission p = Permission.builder()
+                        .resource("dropdowns")
+                        .action(authority.toLowerCase())
+                        .authority(authority)
+                        .description(entry.getValue())
+                        .isSystemPermission(true)
+                        .build();
+                permissionRepository.save(p);
             }
         }
         log.info("Baseline permissions seeded successfully");

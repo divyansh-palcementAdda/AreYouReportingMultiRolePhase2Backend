@@ -164,7 +164,9 @@ public class RoleServiceImpl implements RoleService {
                 "templates.read", "templates.create", "templates.update",
                 "requests.read", "requests.create", "requests.approve", "requests.reject",
                 "proofs.read", "proofs.create", "proofs.delete", "proofs.download",
-                "dashboard.read"
+                "dashboard.read",
+                "dropdowns.departments", "dropdowns.sub-departments", "dropdowns.users", "dropdowns.tasks", "dropdowns.templates", "dropdowns.roles", "dropdowns.permissions", "dropdowns.options",
+                "DROPDOWN_VIEW_DEPARTMENTS", "DROPDOWN_VIEW_SUB_DEPARTMENTS", "DROPDOWN_VIEW_USERS", "DROPDOWN_VIEW_TASKS", "DROPDOWN_VIEW_TASK_TEMPLATES", "DROPDOWN_VIEW_ROLES", "DROPDOWN_VIEW_PERMISSION_OPTIONS", "DROPDOWN_VIEW_PROOF_REQUIREMENTS", "DROPDOWN_VIEW_TASK_STATUS_OPTIONS", "DROPDOWN_VIEW_REQUEST_STATUS_OPTIONS"
         ));
 
         // SUB_ADMIN has sub-department / department operations
@@ -176,7 +178,9 @@ public class RoleServiceImpl implements RoleService {
                 "templates.read",
                 "requests.read", "requests.create", "requests.approve", "requests.reject",
                 "proofs.read", "proofs.create", "proofs.download",
-                "dashboard.read"
+                "dashboard.read",
+                "dropdowns.departments", "dropdowns.sub-departments", "dropdowns.users", "dropdowns.tasks", "dropdowns.templates", "dropdowns.roles", "dropdowns.options",
+                "DROPDOWN_VIEW_DEPARTMENTS", "DROPDOWN_VIEW_SUB_DEPARTMENTS", "DROPDOWN_VIEW_USERS", "DROPDOWN_VIEW_TASKS", "DROPDOWN_VIEW_TASK_TEMPLATES", "DROPDOWN_VIEW_ROLES", "DROPDOWN_VIEW_PROOF_REQUIREMENTS", "DROPDOWN_VIEW_TASK_STATUS_OPTIONS", "DROPDOWN_VIEW_REQUEST_STATUS_OPTIONS"
         ));
 
         // HOD has subdepartment management
@@ -188,7 +192,9 @@ public class RoleServiceImpl implements RoleService {
                 "templates.read",
                 "requests.read", "requests.create", "requests.approve", "requests.reject",
                 "proofs.read", "proofs.create", "proofs.download",
-                "dashboard.read"
+                "dashboard.read",
+                "dropdowns.departments", "dropdowns.sub-departments", "dropdowns.users", "dropdowns.tasks", "dropdowns.templates", "dropdowns.options",
+                "DROPDOWN_VIEW_DEPARTMENTS", "DROPDOWN_VIEW_SUB_DEPARTMENTS", "DROPDOWN_VIEW_USERS", "DROPDOWN_VIEW_TASKS", "DROPDOWN_VIEW_TASK_TEMPLATES", "DROPDOWN_VIEW_PROOF_REQUIREMENTS", "DROPDOWN_VIEW_TASK_STATUS_OPTIONS", "DROPDOWN_VIEW_REQUEST_STATUS_OPTIONS"
         ));
 
         // TEACHER has self / assigned tasks permissions
@@ -199,7 +205,9 @@ public class RoleServiceImpl implements RoleService {
                 "templates.read",
                 "requests.read", "requests.create", "requests.cancel",
                 "proofs.read", "proofs.create", "proofs.download",
-                "dashboard.read"
+                "dashboard.read",
+                "dropdowns.departments", "dropdowns.sub-departments", "dropdowns.users", "dropdowns.tasks", "dropdowns.templates", "dropdowns.options",
+                "DROPDOWN_VIEW_DEPARTMENTS", "DROPDOWN_VIEW_SUB_DEPARTMENTS", "DROPDOWN_VIEW_USERS", "DROPDOWN_VIEW_TASKS", "DROPDOWN_VIEW_TASK_TEMPLATES", "DROPDOWN_VIEW_PROOF_REQUIREMENTS", "DROPDOWN_VIEW_TASK_STATUS_OPTIONS", "DROPDOWN_VIEW_REQUEST_STATUS_OPTIONS"
         ));
 
         Map<String, DataScopeType> scopes = Map.of(
