@@ -40,6 +40,18 @@ public class UserPrincipal implements UserDetails {
                                 authorities.add(new SimpleGrantedAuthority(permission.getAuthority())));
                     }
                 }
+                if (assignment.getDepartment() != null) {
+                    assignment.getDepartment().getId();
+                }
+                if (assignment.getSubDepartment() != null) {
+                    assignment.getSubDepartment().getId();
+                }
+                if (assignment.getCustomDepartments() != null) {
+                    assignment.getCustomDepartments().size();
+                }
+                if (assignment.getCustomSubDepartments() != null) {
+                    assignment.getCustomSubDepartments().size();
+                }
             }
         }
 

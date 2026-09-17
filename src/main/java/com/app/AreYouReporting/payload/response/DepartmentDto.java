@@ -1,5 +1,7 @@
 package com.app.AreYouReporting.payload.response;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +20,10 @@ public class DepartmentDto {
     private String name;
     private String code;
     private String description;
+
+    @JsonProperty("isActive")
+    @JsonAlias({"active", "isActive", "is_active"})
     private boolean isActive;
+
     private List<SubDepartmentDto> subDepartments;
 }

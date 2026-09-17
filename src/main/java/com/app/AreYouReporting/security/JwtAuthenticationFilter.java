@@ -115,19 +115,40 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             roleId = matched.getRole() != null ? matched.getRole().getId() : null;
             roleName = matched.getRole() != null ? matched.getRole().getName() : null;
             if (deptId == null && matched.getDepartment() != null) {
-                deptId = matched.getDepartment().getId();
+                try {
+                    deptId = matched.getDepartment().getId();
+                } catch (Exception ignored) {}
             }
             if (subDeptId == null && matched.getSubDepartment() != null) {
-                subDeptId = matched.getSubDepartment().getId();
+                try {
+                    subDeptId = matched.getSubDepartment().getId();
+                } catch (Exception ignored) {}
             }
             effectiveScope = matched.getDataScopeType() != null ? matched.getDataScopeType()
                     : (matched.getRole() != null ? matched.getRole().getDefaultDataScope() : DataScopeType.SELF);
 
-            if (matched.getCustomDepartments() != null) {
-                customDeptIds = matched.getCustomDepartments().stream().map(d -> d.getId()).collect(Collectors.toSet());
+            try {
+                if (matched.getCustomDepartments() != null) {
+                    customDeptIds = matched.getCustomDepartments().stream()
+                            .filter(java.util.Objects::nonNull)
+                            .map(d -> d.getId())
+                            .filter(java.util.Objects::nonNull)
+                            .collect(Collectors.toSet());
+                }
+            } catch (Exception e) {
+                log.debug("Could not resolve customDepartments: {}", e.getMessage());
             }
-            if (matched.getCustomSubDepartments() != null) {
-                customSubDeptIds = matched.getCustomSubDepartments().stream().map(sd -> sd.getId()).collect(Collectors.toSet());
+
+            try {
+                if (matched.getCustomSubDepartments() != null) {
+                    customSubDeptIds = matched.getCustomSubDepartments().stream()
+                            .filter(java.util.Objects::nonNull)
+                            .map(sd -> sd.getId())
+                            .filter(java.util.Objects::nonNull)
+                            .collect(Collectors.toSet());
+                }
+            } catch (Exception e) {
+                log.debug("Could not resolve customSubDepartments: {}", e.getMessage());
             }
         } else if ("superadmin".equalsIgnoreCase(principal.getUsername()) || (principal.getAuthorities() != null && principal.getAuthorities().stream().anyMatch(a -> a.getAuthority().equalsIgnoreCase("ROLE_SUPER_ADMIN")))) {
             effectiveScope = DataScopeType.GLOBAL;

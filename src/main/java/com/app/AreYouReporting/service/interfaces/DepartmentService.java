@@ -1,5 +1,7 @@
 package com.app.AreYouReporting.service.interfaces;
 
+import com.app.AreYouReporting.Entities.Department;
+import com.app.AreYouReporting.Entities.SubDepartment;
 import com.app.AreYouReporting.payload.request.DepartmentRequest;
 import com.app.AreYouReporting.payload.request.SubDepartmentRequest;
 import com.app.AreYouReporting.payload.response.DepartmentDto;
@@ -14,6 +16,8 @@ public interface DepartmentService {
 
     DepartmentDto getDepartmentById(UUID id);
 
+    Department getDepartmentByIdOrThrow(UUID id);
+
     DepartmentDto createDepartment(DepartmentRequest request);
 
     DepartmentDto updateDepartment(UUID id, DepartmentRequest request);
@@ -23,6 +27,8 @@ public interface DepartmentService {
     List<SubDepartmentDto> getSubDepartmentsByDeptId(UUID deptId, boolean activeOnly);
 
     SubDepartmentDto getSubDepartmentById(UUID id);
+
+    SubDepartment getSubDepartmentByIdOrThrow(UUID id);
 
     SubDepartmentDto createSubDepartment(UUID deptId, SubDepartmentRequest request);
 

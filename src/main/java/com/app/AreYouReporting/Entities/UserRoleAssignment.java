@@ -28,11 +28,11 @@ public class UserRoleAssignment extends AuditableEntity {
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "department_id")
     private Department department;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "sub_department_id")
     private SubDepartment subDepartment;
 
@@ -40,7 +40,7 @@ public class UserRoleAssignment extends AuditableEntity {
     @Column(name = "data_scope_type", length = 30)
     private DataScopeType dataScopeType;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_assignment_custom_departments",
             joinColumns = @JoinColumn(name = "assignment_id"),
@@ -49,7 +49,7 @@ public class UserRoleAssignment extends AuditableEntity {
     @Builder.Default
     private Set<Department> customDepartments = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_assignment_custom_sub_departments",
             joinColumns = @JoinColumn(name = "assignment_id"),
