@@ -38,6 +38,17 @@ public class TaskTemplateMapper {
 
     public TaskTemplateDto toDto(TaskTemplate template) {
         if (template == null) return null;
+
+        List<com.app.AreYouReporting.Entities.Department> activeDepts = template.getApplicableDepartments() != null
+                ? template.getApplicableDepartments().stream().filter(com.app.AreYouReporting.Entities.Department::isActive).collect(Collectors.toList())
+                : Collections.emptyList();
+
+        List<com.app.AreYouReporting.Entities.SubDepartment> activeSubDepts = template.getApplicableSubDepartments() != null
+                ? template.getApplicableSubDepartments().stream()
+                .filter(sd -> sd.isActive() && sd.getDepartment() != null && sd.getDepartment().isActive())
+                .collect(Collectors.toList())
+                : Collections.emptyList();
+
         return TaskTemplateDto.builder()
                 .id(template.getId())
                 .name(template.getName())
@@ -47,8 +58,8 @@ public class TaskTemplateMapper {
                 .defaultTargetCount(template.getDefaultTargetCount())
                 .defaultTargetPercentage(template.getDefaultTargetPercentage())
                 .isActive(template.isActive())
-                .applicableDepartments(template.getApplicableDepartments() != null ? departmentMapper.toDtoList(template.getApplicableDepartments()) : Collections.emptyList())
-                .applicableSubDepartments(template.getApplicableSubDepartments() != null ? departmentMapper.toSubDeptDtoList(template.getApplicableSubDepartments()) : Collections.emptyList())
+                .applicableDepartments(departmentMapper.toDtoList(activeDepts))
+                .applicableSubDepartments(departmentMapper.toSubDeptDtoList(activeSubDepts))
                 .proofRequirements(template.getProofRequirements() != null ? toRequirementDtoList(template.getProofRequirements()) : Collections.emptyList())
                 .build();
     }

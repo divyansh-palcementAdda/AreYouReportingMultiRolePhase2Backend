@@ -24,6 +24,11 @@ public interface DepartmentRepository extends JpaRepository<Department, UUID>, J
 
     List<Department> findByIsActiveTrue();
 
+    Optional<Department> findByIdAndIsActiveTrue(UUID id);
+
+    @Query("SELECT DISTINCT d FROM Department d LEFT JOIN FETCH d.subDepartments s WHERE d.id = :id AND d.isActive = true")
+    Optional<Department> findActiveByIdWithSubDepartments(@Param("id") UUID id);
+
     @Query("SELECT DISTINCT d FROM Department d LEFT JOIN FETCH d.subDepartments WHERE d.id = :id")
     Optional<Department> findByIdWithSubDepartments(@Param("id") UUID id);
 }

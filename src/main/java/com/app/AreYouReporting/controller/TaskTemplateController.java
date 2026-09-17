@@ -27,7 +27,7 @@ public class TaskTemplateController {
     @GetMapping
     @Operation(summary = "Get all task templates")
     public ResponseEntity<ApiResponse<List<TaskTemplateDto>>> getAllTemplates(
-            @RequestParam(value = "activeOnly", defaultValue = "false") boolean activeOnly) {
+            @RequestParam(value = "activeOnly", defaultValue = "true") boolean activeOnly) {
         List<TaskTemplateDto> templates = templateService.getAllTemplates(activeOnly);
         return ResponseEntity.ok(ApiResponse.success(templates));
     }

@@ -20,6 +20,15 @@ public interface TaskTemplateRepository extends JpaRepository<TaskTemplate, UUID
 
     List<TaskTemplate> findByIsActiveTrue();
 
+    Optional<TaskTemplate> findByIdAndIsActiveTrue(UUID id);
+
+    @Query("SELECT DISTINCT tt FROM TaskTemplate tt " +
+           "LEFT JOIN FETCH tt.proofRequirements pr " +
+           "LEFT JOIN FETCH tt.applicableDepartments " +
+           "LEFT JOIN FETCH tt.applicableSubDepartments " +
+           "WHERE tt.id = :id AND tt.isActive = true")
+    Optional<TaskTemplate> findActiveByIdWithDetails(@Param("id") UUID id);
+
     @Query("SELECT DISTINCT tt FROM TaskTemplate tt " +
            "LEFT JOIN FETCH tt.proofRequirements pr " +
            "LEFT JOIN FETCH tt.applicableDepartments " +

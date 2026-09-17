@@ -1,15 +1,18 @@
 package com.app.AreYouReporting.mapper;
 
-import com.app.AreYouReporting.Entities.Task;
-import com.app.AreYouReporting.payload.response.TaskDto;
-import com.app.AreYouReporting.payload.response.TaskSummaryDto;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Component;
+
+import com.app.AreYouReporting.Entities.Task;
+import com.app.AreYouReporting.payload.response.TaskDto;
+import com.app.AreYouReporting.payload.response.TaskSummaryDto;
+import com.app.AreYouReporting.payload.response.TaskTemplateDto;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
@@ -46,6 +49,25 @@ public class TaskMapper {
 
     public TaskDto toDto(Task task) {
         if (task == null) return null;
+
+        List<com.app.AreYouReporting.Entities.Department> activeDepts = task.getAssignedDepartments() != null
+                ? task.getAssignedDepartments().stream().filter(com.app.AreYouReporting.Entities.Department::isActive).collect(Collectors.toList())
+                : Collections.emptyList();
+
+        List<com.app.AreYouReporting.Entities.SubDepartment> activeSubDepts = task.getAssignedSubDepartments() != null
+                ? task.getAssignedSubDepartments().stream()
+                .filter(sd -> sd.isActive() && sd.getDepartment() != null && sd.getDepartment().isActive())
+                .collect(Collectors.toList())
+                : Collections.emptyList();
+
+        List<com.app.AreYouReporting.Entities.User> activeAssignees = task.getAssignees() != null
+                ? task.getAssignees().stream().filter(com.app.AreYouReporting.Entities.User::isActive).collect(Collectors.toList())
+                : Collections.emptyList();
+
+        TaskTemplateDto activeTemplate = (task.getTemplate() != null && task.getTemplate().isActive())
+                ? taskTemplateMapper.toDto(task.getTemplate())
+                : null;
+
         return TaskDto.builder()
                 .id(task.getId())
                 .title(task.getTitle())
@@ -57,9 +79,9 @@ public class TaskMapper {
                 .originalDueDate(task.getOriginalDueDate())
                 .isSelfTask(task.isSelfTask())
                 .creator(userMapper.toSummaryDto(task.getCreator()))
-                .assignedDepartments(task.getAssignedDepartments() != null ? departmentMapper.toDtoList(task.getAssignedDepartments()) : Collections.emptyList())
-                .assignedSubDepartments(task.getAssignedSubDepartments() != null ? departmentMapper.toSubDeptDtoList(task.getAssignedSubDepartments()) : Collections.emptyList())
-                .assignees(task.getAssignees() != null ? userMapper.toSummaryDtoList(task.getAssignees()) : Collections.emptyList())
+                .assignedDepartments(departmentMapper.toDtoList(activeDepts))
+                .assignedSubDepartments(departmentMapper.toSubDeptDtoList(activeSubDepts))
+                .assignees(userMapper.toSummaryDtoList(activeAssignees))
                 .startedBy(userMapper.toSummaryDto(task.getStartedBy()))
                 .startedAt(task.getStartedAt())
                 .closedBy(userMapper.toSummaryDto(task.getClosedBy()))
@@ -77,7 +99,7 @@ public class TaskMapper {
                 .lastRejectionReason(task.getLastRejectionReason())
                 .lastRejectedAt(task.getLastRejectedAt())
                 .lastRejectedBy(userMapper.toSummaryDto(task.getLastRejectedBy()))
-                .template(taskTemplateMapper.toDto(task.getTemplate()))
+                .template(activeTemplate)
                 .targetCount(task.getTargetCount())
                 .currentCount(task.getCurrentCount())
                 .targetPercentage(task.getTargetPercentage())

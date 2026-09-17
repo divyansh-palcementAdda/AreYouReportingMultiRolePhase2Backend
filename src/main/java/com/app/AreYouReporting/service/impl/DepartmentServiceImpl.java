@@ -81,6 +81,10 @@ public class DepartmentServiceImpl implements DepartmentService {
         logDiagnostic("getDepartmentById", id, principal, context);
 
         Department dept = getDepartmentByIdOrThrow(id);
+        if (!dept.isActive()) {
+            log.warn("[DepartmentLookupFailed] Inactive department requested via getById: '{}'", id);
+            throw new DepartmentNotFoundException(id);
+        }
 
         if (!scopeSecurity.canAccessDepartment(dept.getId(), context, principal)) {
             log.warn("[DepartmentAccessDenied] User '{}' lacks authority to view department '{}' ({})",
@@ -223,6 +227,9 @@ public class DepartmentServiceImpl implements DepartmentService {
         ActiveUserContext context = getActiveContext();
 
         Department dept = getDepartmentByIdOrThrow(deptId);
+        if (!dept.isActive()) {
+            throw new DepartmentNotFoundException(deptId);
+        }
         if (!scopeSecurity.canAccessDepartment(dept.getId(), context, principal)) {
             throw new ScopeViolationException("Access denied: You do not have permission to view sub-departments for department: " + dept.getName());
         }
@@ -242,6 +249,9 @@ public class DepartmentServiceImpl implements DepartmentService {
         ActiveUserContext context = getActiveContext();
 
         SubDepartment subDept = getSubDepartmentByIdOrThrow(id);
+        if (!subDept.isActive() || (subDept.getDepartment() != null && !subDept.getDepartment().isActive())) {
+            throw new ResourceNotFoundException("SubDepartment", "id", id);
+        }
         UUID deptId = subDept.getDepartment() != null ? subDept.getDepartment().getId() : null;
 
         if (!scopeSecurity.canAccessSubDepartment(subDept.getId(), deptId, context, principal)) {

@@ -28,7 +28,7 @@ public class DepartmentController {
     @GetMapping
     @Operation(summary = "Get all departments (with child sub-departments)")
     public ResponseEntity<ApiResponse<List<DepartmentDto>>> getAllDepartments(
-            @RequestParam(value = "activeOnly", defaultValue = "false") boolean activeOnly) {
+            @RequestParam(value = "activeOnly", defaultValue = "true") boolean activeOnly) {
         List<DepartmentDto> departments = departmentService.getAllDepartments(activeOnly);
         return ResponseEntity.ok(ApiResponse.success(departments));
     }
@@ -68,7 +68,7 @@ public class DepartmentController {
     @Operation(summary = "Get all sub-departments belonging to a department")
     public ResponseEntity<ApiResponse<List<SubDepartmentDto>>> getSubDepartmentsByDeptId(
             @PathVariable("deptId") UUID deptId,
-            @RequestParam(value = "activeOnly", defaultValue = "false") boolean activeOnly) {
+            @RequestParam(value = "activeOnly", defaultValue = "true") boolean activeOnly) {
         List<SubDepartmentDto> subDepartments = departmentService.getSubDepartmentsByDeptId(deptId, activeOnly);
         return ResponseEntity.ok(ApiResponse.success(subDepartments));
     }

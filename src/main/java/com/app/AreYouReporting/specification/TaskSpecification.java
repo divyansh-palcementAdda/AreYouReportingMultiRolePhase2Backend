@@ -35,10 +35,8 @@ public class TaskSpecification {
             query.distinct(true);
             List<Predicate> predicates = new ArrayList<>();
 
-            // Exclude soft-deleted tasks unless explicitly asked
-            if (statuses == null || !statuses.contains(TaskStatus.DELETED)) {
-                predicates.add(cb.notEqual(root.get("status"), TaskStatus.DELETED));
-            }
+            // Always unconditionally exclude soft-deleted tasks from all read queries
+            predicates.add(cb.notEqual(root.get("status"), TaskStatus.DELETED));
 
             if (StringUtils.hasText(search)) {
                 String searchPattern = "%" + search.toLowerCase().trim() + "%";
@@ -48,7 +46,14 @@ public class TaskSpecification {
             }
 
             if (statuses != null && !statuses.isEmpty()) {
-                predicates.add(root.get("status").in(statuses));
+                List<TaskStatus> nonDeletedStatuses = statuses.stream()
+                        .filter(s -> s != TaskStatus.DELETED)
+                        .toList();
+                if (nonDeletedStatuses.isEmpty()) {
+                    predicates.add(cb.disjunction());
+                } else {
+                    predicates.add(root.get("status").in(nonDeletedStatuses));
+                }
             }
 
             if (priority != null) {
@@ -74,11 +79,14 @@ public class TaskSpecification {
             if (departmentId != null) {
                 Join<Task, Department> deptJoin = root.join("assignedDepartments", JoinType.LEFT);
                 predicates.add(cb.equal(deptJoin.get("id"), departmentId));
+                predicates.add(cb.isTrue(deptJoin.get("isActive")));
             }
 
             if (subDepartmentId != null) {
                 Join<Task, SubDepartment> subDeptJoin = root.join("assignedSubDepartments", JoinType.LEFT);
                 predicates.add(cb.equal(subDeptJoin.get("id"), subDepartmentId));
+                predicates.add(cb.isTrue(subDeptJoin.get("isActive")));
+                predicates.add(cb.isTrue(subDeptJoin.get("department").get("isActive")));
             }
 
             if (fromDate != null) {

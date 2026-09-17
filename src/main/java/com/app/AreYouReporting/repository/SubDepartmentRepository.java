@@ -18,6 +18,12 @@ public interface SubDepartmentRepository extends JpaRepository<SubDepartment, UU
 
     List<SubDepartment> findByDepartmentIdAndIsActiveTrue(UUID departmentId);
 
+    @Query("SELECT s FROM SubDepartment s JOIN s.department d WHERE s.id = :id AND s.isActive = true AND d.isActive = true")
+    Optional<SubDepartment> findActiveById(@Param("id") UUID id);
+
+    @Query("SELECT s FROM SubDepartment s JOIN s.department d WHERE s.department.id = :departmentId AND s.isActive = true AND d.isActive = true")
+    List<SubDepartment> findActiveByDepartmentId(@Param("departmentId") UUID departmentId);
+
     Optional<SubDepartment> findByDepartmentIdAndName(UUID departmentId, String name);
 
     Optional<SubDepartment> findByDepartmentIdAndCode(UUID departmentId, String code);

@@ -16,13 +16,20 @@ public class DepartmentMapper {
 
     public DepartmentDto toDto(Department dept) {
         if (dept == null) return null;
+        List<SubDepartmentDto> activeSubDepts = Collections.emptyList();
+        if (dept.getSubDepartments() != null) {
+            activeSubDepts = dept.getSubDepartments().stream()
+                    .filter(SubDepartment::isActive)
+                    .map(this::toSubDeptDto)
+                    .collect(Collectors.toList());
+        }
         return DepartmentDto.builder()
                 .id(dept.getId())
                 .name(dept.getName())
                 .code(dept.getCode())
                 .description(dept.getDescription())
                 .isActive(dept.isActive())
-                .subDepartments(dept.getSubDepartments() != null ? toSubDeptDtoList(dept.getSubDepartments()) : Collections.emptyList())
+                .subDepartments(activeSubDepts)
                 .build();
     }
 

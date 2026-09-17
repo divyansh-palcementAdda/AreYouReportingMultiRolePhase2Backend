@@ -1,5 +1,7 @@
 package com.app.AreYouReporting.mapper;
 
+import com.app.AreYouReporting.Entities.Department;
+import com.app.AreYouReporting.Entities.SubDepartment;
 import com.app.AreYouReporting.Entities.User;
 import com.app.AreYouReporting.Entities.UserRoleAssignment;
 import com.app.AreYouReporting.payload.response.ResourceGrantsDto;
@@ -38,6 +40,17 @@ public class UserMapper {
 
     public UserRoleAssignmentDto toAssignmentDto(UserRoleAssignment assignment) {
         if (assignment == null) return null;
+
+        List<Department> activeCustomDepts = assignment.getCustomDepartments() != null
+                ? assignment.getCustomDepartments().stream().filter(Department::isActive).collect(Collectors.toList())
+                : Collections.emptyList();
+
+        List<SubDepartment> activeCustomSubDepts = assignment.getCustomSubDepartments() != null
+                ? assignment.getCustomSubDepartments().stream()
+                .filter(sd -> sd.isActive() && sd.getDepartment() != null && sd.getDepartment().isActive())
+                .collect(Collectors.toList())
+                : Collections.emptyList();
+
         return UserRoleAssignmentDto.builder()
                 .id(assignment.getId())
                 .roleId(assignment.getRole() != null ? assignment.getRole().getId() : null)
@@ -48,8 +61,8 @@ public class UserMapper {
                 .subDepartmentName(assignment.getSubDepartment() != null ? assignment.getSubDepartment().getName() : null)
                 .dataScopeType(assignment.getDataScopeType() != null ? assignment.getDataScopeType()
                         : (assignment.getRole() != null ? assignment.getRole().getDefaultDataScope() : null))
-                .customDepartments(assignment.getCustomDepartments() != null ? departmentMapper.toDtoList(assignment.getCustomDepartments()) : Collections.emptyList())
-                .customSubDepartments(assignment.getCustomSubDepartments() != null ? departmentMapper.toSubDeptDtoList(assignment.getCustomSubDepartments()) : Collections.emptyList())
+                .customDepartments(departmentMapper.toDtoList(activeCustomDepts))
+                .customSubDepartments(departmentMapper.toSubDeptDtoList(activeCustomSubDepts))
                 .isActive(assignment.isActive())
                 .build();
     }
@@ -61,6 +74,25 @@ public class UserMapper {
 
     public UserDto toDto(User user, List<ResourceGrantsDto> effectiveGrants) {
         if (user == null) return null;
+
+        List<Department> activeDepts = user.getDepartments() != null
+                ? user.getDepartments().stream().filter(Department::isActive).collect(Collectors.toList())
+                : Collections.emptyList();
+
+        List<SubDepartment> activeSubDepts = user.getSubDepartments() != null
+                ? user.getSubDepartments().stream()
+                .filter(sd -> sd.isActive() && sd.getDepartment() != null && sd.getDepartment().isActive())
+                .collect(Collectors.toList())
+                : Collections.emptyList();
+
+        List<UserRoleAssignment> activeAssignments = user.getRoleAssignments() != null
+                ? user.getRoleAssignments().stream()
+                .filter(UserRoleAssignment::isActive)
+                .filter(a -> a.getDepartment() == null || a.getDepartment().isActive())
+                .filter(a -> a.getSubDepartment() == null || (a.getSubDepartment().isActive() && a.getSubDepartment().getDepartment() != null && a.getSubDepartment().getDepartment().isActive()))
+                .collect(Collectors.toList())
+                : Collections.emptyList();
+
         return UserDto.builder()
                 .id(user.getId())
                 .username(user.getUsername())
@@ -68,9 +100,9 @@ public class UserMapper {
                 .fullName(user.getFullName())
                 .phoneNumber(user.getPhoneNumber())
                 .isActive(user.isActive())
-                .departments(user.getDepartments() != null ? departmentMapper.toDtoList(user.getDepartments()) : Collections.emptyList())
-                .subDepartments(user.getSubDepartments() != null ? departmentMapper.toSubDeptDtoList(user.getSubDepartments()) : Collections.emptyList())
-                .roleAssignments(user.getRoleAssignments() != null ? toAssignmentDtoList(user.getRoleAssignments()) : Collections.emptyList())
+                .departments(departmentMapper.toDtoList(activeDepts))
+                .subDepartments(departmentMapper.toSubDeptDtoList(activeSubDepts))
+                .roleAssignments(toAssignmentDtoList(activeAssignments))
                 .effectiveGrants(effectiveGrants != null ? effectiveGrants : Collections.emptyList())
                 .build();
     }

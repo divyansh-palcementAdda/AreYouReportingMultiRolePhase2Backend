@@ -232,7 +232,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional(readOnly = true)
     public UserDto getCurrentUserProfile() {
         UserPrincipal principal = scopeSecurity.getCurrentPrincipal();
-        User user = userRepository.findById(principal.getId())
+        User user = userRepository.findByIdAndIsActiveTrue(principal.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", principal.getId()));
 
         List<Permission> allPermissions = permissionRepository.findAllByOrderByResourceAscActionAsc();

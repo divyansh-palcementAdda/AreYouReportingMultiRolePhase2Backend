@@ -68,7 +68,7 @@ public class PermissionServiceImpl implements PermissionService {
     public UserPermissionResponse getUserPermissions(UUID userId, UUID roleId) {
         final UUID targetUserId = (userId != null) ? userId : scopeSecurity.getCurrentUserId();
 
-        User user = userRepository.findById(targetUserId)
+        User user = userRepository.findByIdAndIsActiveTrue(targetUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", targetUserId));
 
         List<UserRoleAssignment> assignments = assignmentRepository.findAllActiveWithDetailsByUserId(targetUserId);

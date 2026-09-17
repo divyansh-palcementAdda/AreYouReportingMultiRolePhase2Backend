@@ -251,6 +251,10 @@ public class TaskRequestServiceImpl implements TaskRequestService {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", taskId));
 
+        if (task.getStatus() == TaskStatus.DELETED) {
+            throw new ResourceNotFoundException("Task", "id", taskId);
+        }
+
         if (!scopeSecurity.canViewTask(task, context, principal)) {
             throw new ScopeViolationException("You do not have permission to view requests for this task");
         }
@@ -266,6 +270,10 @@ public class TaskRequestServiceImpl implements TaskRequestService {
 
         TaskRequest request = requestRepository.findByIdWithDetails(requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("TaskRequest", "id", requestId));
+
+        if (request.getTask() == null || request.getTask().getStatus() == TaskStatus.DELETED) {
+            throw new ResourceNotFoundException("TaskRequest", "id", requestId);
+        }
 
         if (!scopeSecurity.canViewTask(request.getTask(), context, principal)) {
             throw new ScopeViolationException("You do not have permission to view this request");

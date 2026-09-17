@@ -48,7 +48,7 @@ public class TaskTemplateServiceImpl implements TaskTemplateService {
     @Override
     @Transactional(readOnly = true)
     public TaskTemplateDto getTemplateById(UUID id) {
-        TaskTemplate template = taskTemplateRepository.findByIdWithDetails(id)
+        TaskTemplate template = taskTemplateRepository.findActiveByIdWithDetails(id)
                 .orElseThrow(() -> new ResourceNotFoundException("TaskTemplate", "id", id));
         return taskTemplateMapper.toDto(template);
     }

@@ -121,6 +121,10 @@ public class TaskProofServiceImpl implements TaskProofService {
         TaskProof proof = proofRepository.findById(proofId)
                 .orElseThrow(() -> new ResourceNotFoundException("TaskProof", "id", proofId));
 
+        if (proof.getTask() == null || proof.getTask().getStatus() == TaskStatus.DELETED) {
+            throw new ResourceNotFoundException("TaskProof", "id", proofId);
+        }
+
         if (!scopeSecurity.canViewTask(proof.getTask(), context, principal)) {
             throw new ScopeViolationException("You do not have permission to download this proof");
         }
@@ -140,6 +144,10 @@ public class TaskProofServiceImpl implements TaskProofService {
 
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", "id", taskId));
+
+        if (task.getStatus() == TaskStatus.DELETED) {
+            throw new ResourceNotFoundException("Task", "id", taskId);
+        }
 
         if (!scopeSecurity.canViewTask(task, context, principal)) {
             throw new ScopeViolationException("You do not have permission to view proofs for this task");

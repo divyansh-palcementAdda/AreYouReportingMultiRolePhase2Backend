@@ -21,7 +21,7 @@ public class DropdownSpecification {
             query.distinct(true);
             List<Predicate> predicates = new ArrayList<>();
 
-            if (Boolean.TRUE.equals(activeOnly)) {
+            if (activeOnly == null || Boolean.TRUE.equals(activeOnly)) {
                 predicates.add(cb.isTrue(root.get("isActive")));
             }
 
@@ -56,8 +56,9 @@ public class DropdownSpecification {
             query.distinct(true);
             List<Predicate> predicates = new ArrayList<>();
 
-            if (Boolean.TRUE.equals(activeOnly)) {
+            if (activeOnly == null || Boolean.TRUE.equals(activeOnly)) {
                 predicates.add(cb.isTrue(root.get("isActive")));
+                predicates.add(cb.isTrue(root.get("department").get("isActive")));
             }
 
             if (departmentId != null) {
@@ -105,7 +106,7 @@ public class DropdownSpecification {
             query.distinct(true);
             List<Predicate> predicates = new ArrayList<>();
 
-            if (Boolean.TRUE.equals(activeOnly)) {
+            if (activeOnly == null || Boolean.TRUE.equals(activeOnly)) {
                 predicates.add(cb.isTrue(root.get("isActive")));
             }
 
@@ -120,11 +121,14 @@ public class DropdownSpecification {
             if (departmentId != null) {
                 Join<User, Department> deptJoin = root.join("departments", JoinType.LEFT);
                 predicates.add(cb.equal(deptJoin.get("id"), departmentId));
+                predicates.add(cb.isTrue(deptJoin.get("isActive")));
             }
 
             if (subDepartmentId != null) {
                 Join<User, SubDepartment> subDeptJoin = root.join("subDepartments", JoinType.LEFT);
                 predicates.add(cb.equal(subDeptJoin.get("id"), subDepartmentId));
+                predicates.add(cb.isTrue(subDeptJoin.get("isActive")));
+                predicates.add(cb.isTrue(subDeptJoin.get("department").get("isActive")));
             }
 
             if (StringUtils.hasText(roleName)) {
@@ -170,7 +174,7 @@ public class DropdownSpecification {
             query.distinct(true);
             List<Predicate> predicates = new ArrayList<>();
 
-            if (Boolean.TRUE.equals(activeOnly)) {
+            if (activeOnly == null || Boolean.TRUE.equals(activeOnly)) {
                 predicates.add(cb.isTrue(root.get("isActive")));
             }
 

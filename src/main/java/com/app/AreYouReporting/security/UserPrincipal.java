@@ -1,5 +1,7 @@
 package com.app.AreYouReporting.security;
 
+import com.app.AreYouReporting.Entities.Department;
+import com.app.AreYouReporting.Entities.SubDepartment;
 import com.app.AreYouReporting.Entities.User;
 import com.app.AreYouReporting.Entities.UserRoleAssignment;
 import lombok.AllArgsConstructor;
@@ -60,11 +62,17 @@ public class UserPrincipal implements UserDetails {
         }
 
         Set<UUID> deptIds = user.getDepartments() != null
-                ? user.getDepartments().stream().map(d -> d.getId()).collect(Collectors.toSet())
+                ? user.getDepartments().stream()
+                        .filter(Department::isActive)
+                        .map(Department::getId)
+                        .collect(Collectors.toSet())
                 : Collections.emptySet();
 
         Set<UUID> subDeptIds = user.getSubDepartments() != null
-                ? user.getSubDepartments().stream().map(sd -> sd.getId()).collect(Collectors.toSet())
+                ? user.getSubDepartments().stream()
+                        .filter(sd -> sd.isActive() && sd.getDepartment() != null && sd.getDepartment().isActive())
+                        .map(SubDepartment::getId)
+                        .collect(Collectors.toSet())
                 : Collections.emptySet();
 
         return UserPrincipal.builder()

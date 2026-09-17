@@ -229,4 +229,16 @@ public class DepartmentServiceLookupTest {
         assertEquals("Test", result.getName());
         verify(departmentRepository).findById(deptId);
     }
+
+    @Test
+    @DisplayName("Inactive department throws DepartmentNotFoundException (404) on getDepartmentById")
+    void testInactiveDepartmentThrows404OnGetDepartmentById() {
+        testDept.setActive(false);
+        when(scopeSecurity.getCurrentPrincipal()).thenReturn(adminPrincipal);
+        when(departmentRepository.findById(deptId)).thenReturn(Optional.of(testDept));
+
+        assertThrows(DepartmentNotFoundException.class, () ->
+                departmentService.getDepartmentById(deptId)
+        );
+    }
 }

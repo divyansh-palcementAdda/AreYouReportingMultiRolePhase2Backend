@@ -48,7 +48,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<UserDto> getAllUsers(Pageable pageable) {
-        Page<User> page = userRepository.findAll(pageable);
+        Page<User> page = userRepository.findByIsActiveTrue(pageable);
         List<Permission> allPermissions = permissionRepository.findAllByOrderByResourceAscActionAsc();
 
         List<UserDto> dtos = page.getContent().stream().map(user -> {
@@ -63,7 +63,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public UserDto getUserById(UUID id) {
-        User user = userRepository.findById(id)
+        User user = userRepository.findByIdAndIsActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
 
         List<Permission> allPermissions = permissionRepository.findAllByOrderByResourceAscActionAsc();
@@ -276,12 +276,16 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public List<UserSummaryDto> getUsersByDepartment(UUID departmentId) {
+        Department dept = departmentRepository.findByIdAndIsActiveTrue(departmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Department", "id", departmentId));
         return userMapper.toSummaryDtoList(userRepository.findByDepartmentId(departmentId));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<UserSummaryDto> getUsersBySubDepartment(UUID subDepartmentId) {
+        SubDepartment subDept = subDepartmentRepository.findActiveById(subDepartmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("SubDepartment", "id", subDepartmentId));
         return userMapper.toSummaryDtoList(userRepository.findBySubDepartmentId(subDepartmentId));
     }
 

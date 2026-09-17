@@ -25,6 +25,8 @@ public interface TaskRepository extends JpaRepository<Task, UUID>, JpaSpecificat
            "WHERE t.id = :id AND t.status <> 'DELETED'")
     Optional<Task> findActiveByIdWithDetails(@Param("id") UUID id);
 
+    Optional<Task> findByIdAndStatusNot(UUID id, TaskStatus status);
+
     @Query("SELECT DISTINCT t FROM Task t " +
            "LEFT JOIN FETCH t.creator " +
            "LEFT JOIN FETCH t.assignedDepartments " +
